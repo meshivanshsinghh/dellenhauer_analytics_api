@@ -7,13 +7,16 @@ import logging
 from flask_cors import CORS
 from datetime import datetime
 from google.analytics.admin import AnalyticsAdminServiceClient
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 app = Flask(__name__)
 logging.basicConfig(level=logging.DEBUG)
 CORS(app)
 
 PROPERTY_ID = 'properties/437018419'
-KEY_FILE_PATH = 'dellenhauerprod.json'
 API_KEY = 'd422b131-c67b-4e0c-86fc-3b5f4b9adc36'
 
 def require_api_key(f):
@@ -28,13 +31,25 @@ def require_api_key(f):
 
 def fetch_data_from_analytics(event_name, start_date, end_date):
     try:
-        credentials = service_account.Credentials.from_service_account_file(KEY_FILE_PATH)
+        credentials_info = {
+            "type": os.getenv('TYPE'),
+            "project_id": os.getenv('PROJECT_ID'),
+            "private_key_id": os.getenv('PRIVATE_KEY_ID'),
+            "private_key": os.getenv('PRIVATE_KEY').replace('\\n', '\n'),
+            "client_email": os.getenv('CLIENT_EMAIL'),
+            "client_id": os.getenv('CLIENT_ID'),
+            "auth_uri": os.getenv('AUTH_URI'),
+            "token_uri": os.getenv('TOKEN_URI'),
+            "auth_provider_x509_cert_url": os.getenv('AUTH_PROVIDER_X509_CERT_URL'),
+            "client_x509_cert_url": os.getenv('CLIENT_X509_CERT_URL')
+        }
+        credentials = service_account.Credentials.from_service_account_info(credentials_info)
         client = BetaAnalyticsDataClient(credentials=credentials)
-        
+
         dimension_name = "customEvent:article_id"
         if event_name == 'channel_join':
             dimension_name = "customEvent:channel_id"
-        
+
         request = RunReportRequest(
             property=PROPERTY_ID,
             dimensions=[{"name": dimension_name}],
