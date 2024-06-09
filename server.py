@@ -17,12 +17,11 @@ logging.basicConfig(level=logging.DEBUG)
 CORS(app)
 
 PROPERTY_ID = 'properties/437018419'
-API_KEY = 'd422b131-c67b-4e0c-86fc-3b5f4b9adc36'
 
 def require_api_key(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        if request.headers.get('x-api-key') == API_KEY:
+        if request.headers.get('X-API-KEY') == os.getenv('X-API-KEY'):
             return f(*args, **kwargs)
         else:
             logging.warning('Unauthorized access attempt.')
